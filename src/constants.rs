@@ -1,0 +1,1 @@
+const MOUSE_PRODUCT_ID:String = "0067";
