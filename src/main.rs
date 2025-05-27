@@ -1,4 +1,4 @@
-use std::{env, io};
+use std::env;
 
 use colored::Colorize;
 use rgb_utils::{config::{set_mouse_id, set_profile}, constants, input};
@@ -54,12 +54,14 @@ fn launch_openrgb() {
 }
 
 fn config() -> Result<String, String>{
-    println!("MouseID[1]\nProfile[2]");
-
-    match input!().as_str() {
+    let result = match input!("MouseID[1]\nProfile[2]").as_str() {
         "1" => set_mouse_id(),
         "2" => set_profile(),
         _ => return Err("Invalid Option".to_string()),   
+    };
+
+    if let Err(e) = result {
+        return Err(e);
     }
 
 
