@@ -13,7 +13,7 @@ pub fn set_profile() -> Result<(), String> {
 
 /// Set the id of the mouse
 pub fn set_mouse_id() -> Result<(), String> {
-    let id = input!("Enter Mouse ID as Hexadecimal: ");
+    let id = input!("Enter Mouse ID as Hexadecimal (e.g., 42a3): ");
     if id.trim().is_empty() {
         return Err("Mouse ID cannot be empty.".to_string());
     }

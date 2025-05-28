@@ -12,13 +12,9 @@ macro_rules! input {
         {
             use std::io;
 
-            if ($prompt == "NO_INPUT") {
-                use std::io::Write;
-                use std::io::stdout;
+            if ($prompt != "NO_INPUT") {
                 // Prints the prompt to the terminal
-                print!("{}", $prompt);
-                // Flushes the output to ensure the prompt is displayed before input
-                stdout().flush().expect("failed to flush stdout");
+                println!("{}", $prompt)
             }
 
             let mut user_input: String = String::new();
@@ -28,7 +24,7 @@ macro_rules! input {
                 .read_line(&mut user_input)
                 .expect("failed to read from stdin");
 
-            user_input
+            user_input.trim().to_string()
         }
     }
 }

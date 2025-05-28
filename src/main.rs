@@ -4,6 +4,8 @@ use colored::Colorize;
 use rgb_utils::{config::{set_mouse_id, set_profile}, constants, input};
 
 fn main() {
+    constants::setup();
+
     let args : Vec<String> = env::args().collect();
 
     if args.len() > 1 {
@@ -37,6 +39,7 @@ fn main() {
 
 }
 
+/// Return a `Vec<String>` of each usb product-id as hexadecimal
 fn get_device_ids() -> Vec<String> {
     let mut devices: Vec<String> = Vec::new();
 
@@ -53,8 +56,13 @@ fn launch_openrgb() {
     println!("Hey ;)")
 }
 
+/// Configure the mouse id or profile to be loaded for openrgb
+/// 
+/// # Returns
+/// * `Ok(String)` - Blank Message
+/// * `Err(String)` - The Error the function had
 fn config() -> Result<String, String>{
-    let result = match input!("MouseID[1]\nProfile[2]").as_str() {
+    let result = match input!("MouseID [1]\nProfile [2]").as_str() {
         "1" => set_mouse_id(),
         "2" => set_profile(),
         _ => return Err("Invalid Option".to_string()),   
@@ -63,7 +71,6 @@ fn config() -> Result<String, String>{
     if let Err(e) = result {
         return Err(e);
     }
-
 
     Ok("".to_string())
 }

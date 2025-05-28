@@ -26,7 +26,7 @@ pub fn setup() {
 
 
 pub fn get_config_dir() -> String {
-    let proj_dir = PROJ_DIRS.get().expect("ProjectDirs in not initialized :(");
+    let proj_dir = PROJ_DIRS.get().expect("ProjectDirs is not initialized :(");
 
     proj_dir.config_dir();
 
