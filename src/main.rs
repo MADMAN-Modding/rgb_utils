@@ -1,7 +1,7 @@
-use std::env;
+use std::{env, process::{Command, Stdio}};
 
 use colored::Colorize;
-use rgb_utils::{config::{set_mouse_id, set_profile}, constants, input};
+use rgb_utils::{config::{get_profile, set_mouse_id, set_profile}, constants, input};
 
 fn main() {
     constants::setup();
@@ -31,7 +31,7 @@ fn main() {
 
     for id in get_device_ids() {
         if id == constants::MOUSE_PRODUCT_ID.to_string() {
-            launch_openrgb();
+            launch_openrgb(get_profile().as_str());
 
             break;
         }
@@ -52,8 +52,13 @@ fn get_device_ids() -> Vec<String> {
     devices
 }
 
-fn launch_openrgb() {
-    println!("Hey ;)")
+fn launch_openrgb(profile: &str) {
+    let _ = Command::new("openrgb")
+    .args(["--profile", profile])
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .spawn()
+    .expect("Failed to load OpenRGB profile");
 }
 
 /// Configure the mouse id or profile to be loaded for openrgb

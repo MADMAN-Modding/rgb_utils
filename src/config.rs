@@ -1,4 +1,4 @@
-use crate::{input, json_handler::write_config};
+use crate::{input, json_handler::{read_config_json, write_config}};
 
 /// Set the profile loaded by the program
 pub fn set_profile() -> Result<(), String> {
@@ -9,6 +9,10 @@ pub fn set_profile() -> Result<(), String> {
 
     write_config("profile", profile);
     Ok(())
+}
+
+pub fn get_profile() -> String {
+    read_config_json("profile")
 }
 
 /// Set the id of the mouse
