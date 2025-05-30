@@ -1,16 +1,20 @@
-use std::{env, process::{Command, Stdio}};
+use std::{env, error::Error, process::{Command, Stdio}};
 
 use colored::Colorize;
 use rgb_utils::{config::{get_profile, set_mouse_id, set_profile}, constants, input};
+use rusb::Context;
+use udev::MonitorBuilder;
 
-fn main() {
+#[tokio::main]
+fn main() -> Result<(), Box<dyn Error>> {
     constants::setup();
 
     let args : Vec<String> = env::args().collect();
 
     if args.len() > 1 {
         let result: Result<String, String> = match args[1].as_str() {
-            "-c" | "--config"  => config(),
+            "-c" | "--config" => config(),
+            "-d" | "--daemon" => listen(),
             _ => Err("Option Not Found".to_string()),
         };
 
@@ -36,6 +40,8 @@ fn main() {
             break;
         }
     }
+
+    Ok(())
 
 }
 
@@ -78,4 +84,27 @@ fn config() -> Result<String, String>{
     }
 
     Ok("".to_string())
+}
+
+fn listen() -> Result<String, String> {
+    let udev_context = Context::new()?;
+
+    let udev_monitor = MonitorBuilder::new()?.match_subsystem_devtype("usb", "usb_device")?.listen()?;
+
+    let (tx, mut rx) = mpsc::channel::<String>(32);
+
+    // Spawns a task to listen for USB events
+    tokio::spawn(async move {
+        println!("Listening for USB device insertions...");
+        for event in monitor {
+            if let Ok(event) = event {
+                if event.event_type() == "add" {
+                    let device_info = format!("USB device inserted: {:?}", event);
+                    let _ = tx.send(device_info).await;
+                }
+            }
+        }
+    });
+
+    Ok("Listening Started".to_string())
 }
