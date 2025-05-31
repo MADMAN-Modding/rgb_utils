@@ -25,3 +25,7 @@ pub fn set_mouse_id() -> Result<(), String> {
     write_config("mouseID", id);
     Ok(())
 }
+
+pub fn get_mouse_id() -> String {
+    read_config_json("mouseID")
+}

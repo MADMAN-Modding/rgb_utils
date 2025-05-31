@@ -1,15 +1,14 @@
 use std::{
     env,
     error::Error,
-    process::{Command, Stdio},
     thread,
     time::Duration,
 };
 
 use colored::Colorize;
 use rgb_utils::{
-    config::{get_profile, set_mouse_id, set_profile},
-    constants, input,
+    config::{set_mouse_id, set_profile},
+    constants, input, usb_handler::check_usbs,
 };
 
 use tokio::task;
@@ -18,7 +17,6 @@ use udev::MonitorBuilder;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     constants::setup();
-
 
     let args: Vec<String> = env::args().collect();
 
@@ -52,28 +50,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// Return a `Vec<String>` of each usb product-id as hexadecimal
-fn get_device_ids() -> Vec<String> {
-    let mut devices: Vec<String> = Vec::new();
-
-    for device in rusb::devices().unwrap().iter() {
-        let device_desc = device.device_descriptor().unwrap();
-
-        devices.push(format!("{:04x}", device_desc.product_id()));
-    }
-
-    devices
-}
-
-fn launch_openrgb(profile: &str) {
-    let _ = Command::new("openrgb")
-        .args(["--profile", profile])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .expect("Failed to load OpenRGB profile");
-}
-
 /// Configure the mouse id or profile to be loaded for openrgb
 ///
 /// # Returns
@@ -97,7 +73,8 @@ async fn listen() -> Result<String, String> {
     // Spawn a task to listen for USB events
     task::spawn_blocking(move || {
         // Create a monitor for USB devices
-        let monitor = MonitorBuilder::new().unwrap()
+        let monitor = MonitorBuilder::new()
+            .unwrap()
             .match_subsystem("usb")
             .unwrap()
             .listen()
@@ -107,20 +84,16 @@ async fn listen() -> Result<String, String> {
 
         // Tracks if something has happened with the usbs
         let mut usb_event: bool = false;
-        
+
         // What value to check for with the `usb_event` bool
         let mut listen_state = false;
         // Loop to listen for events
 
         loop {
-
-            println!("{listen_state} : {usb_event}");
-
             // If an event has happened
             if usb_event {
                 // If the events are over
                 if usb_event == listen_state {
-                    println!("Condition met");
                     thread::sleep(Duration::from_millis(500));
                     check_usbs();
                     listen_state = false;
@@ -130,15 +103,16 @@ async fn listen() -> Result<String, String> {
 
             // Poll for events
             let event = match monitor.iter().next() {
-                Some(event) => {usb_event = true; event},
+                Some(event) => {
+                    usb_event = true;
+                    event
+                }
                 None => {
                     listen_state = true;
                     thread::sleep(Duration::from_millis(10));
                     continue;
-                }    
+                }
             };
-
-
 
             println!("{}", event.action().unwrap().to_string_lossy());
         }
@@ -150,19 +124,3 @@ async fn listen() -> Result<String, String> {
     }
 }
 
-fn check_usbs () {
-    println!("Checking...");
-
-    let _ = Command::new("pkill")
-        .arg("openrgb")
-        .status()
-        .expect("Failed to execute pkill");
-
-    for id in get_device_ids() {
-        if id == constants::MOUSE_PRODUCT_ID.to_string() {
-            launch_openrgb(get_profile().as_str());
-
-            break;
-        }
-    }
-}
