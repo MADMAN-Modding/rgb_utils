@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if args.len() > 1 {
         let result: Result<String, String> = match args[1].as_str() {
             "-c" | "--config" => config(),
-            "-d" | "--daemon" => listen().await,
+            "-l" | "--listen" => listen().await,
             _ => Err("Option Not Found".to_string()),
         };
 
@@ -47,14 +47,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .red()
                 .bold()
         );
-    }
-
-    for id in get_device_ids() {
-        if id == constants::MOUSE_PRODUCT_ID.to_string() {
-            launch_openrgb(get_profile().as_str());
-
-            break;
-        }
     }
 
     Ok(())
@@ -113,17 +105,40 @@ async fn listen() -> Result<String, String> {
 
         println!("Listening for USB events...");
 
+        // Tracks if something has happened with the usbs
+        let mut usb_event: bool = false;
+        
+        // What value to check for with the `usb_event` bool
+        let mut listen_state = false;
         // Loop to listen for events
+
         loop {
+
+            println!("{listen_state} : {usb_event}");
+
+            // If an event has happened
+            if usb_event {
+                // If the events are over
+                if usb_event == listen_state {
+                    println!("Condition met");
+                    thread::sleep(Duration::from_millis(500));
+                    check_usbs();
+                    listen_state = false;
+                    usb_event = false;
+                }
+            }
+
             // Poll for events
             let event = match monitor.iter().next() {
-                Some(event) => event,
+                Some(event) => {usb_event = true; event},
                 None => {
+                    listen_state = true;
                     thread::sleep(Duration::from_millis(10));
                     continue;
-                }
-                
+                }    
             };
+
+
 
             println!("{}", event.action().unwrap().to_string_lossy());
         }
@@ -132,5 +147,22 @@ async fn listen() -> Result<String, String> {
     // Keep the main function alive
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+}
+
+fn check_usbs () {
+    println!("Checking...");
+
+    let _ = Command::new("pkill")
+        .arg("openrgb")
+        .status()
+        .expect("Failed to execute pkill");
+
+    for id in get_device_ids() {
+        if id == constants::MOUSE_PRODUCT_ID.to_string() {
+            launch_openrgb(get_profile().as_str());
+
+            break;
+        }
     }
 }
