@@ -9,7 +9,7 @@ use colored::Colorize;
 use rgb_utils::{
     config::{get_mouse_id, get_profile, set_mouse_id, set_profile},
     constants, input,
-    launchers::launch_openrgb,
+    launchers::launch_openrgb, usb_handler::check_usbs,
 };
 
 use tokio::task;
@@ -25,6 +25,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let result: Result<String, String> = match args[1].as_str() {
             "-c" | "--config" => config(),
             "-l" | "--listen" => listen().await,
+            "-d" | "--daemon" => daemon().await,
             _ => Err("Option Not Found".to_string()),
         };
 
@@ -118,6 +119,16 @@ async fn listen() -> Result<String, String> {
     });
 
     // Keep the main function alive
+    loop {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+}
+
+async fn daemon() -> Result<String, String> {
+    check_usbs();
+
+    let _ = listen();
+
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
