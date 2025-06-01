@@ -81,8 +81,6 @@ async fn listen() -> Result<String, String> {
             .listen()
             .unwrap();
 
-        println!("Listening for USB events...");
-
         // Tracks how many times the id has been seen
         let mut launch: u8 = 0;
 
@@ -90,8 +88,8 @@ async fn listen() -> Result<String, String> {
 
         // Loop to listen for events
         loop {
+            // 6 is the amount of events given off by the events
             if launch == 6 && !eventing {
-                println!("launching");
                 launch_openrgb(&get_profile());
                 launch = 0;
             }

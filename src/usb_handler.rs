@@ -1,40 +1,42 @@
-use crate::{config::get_profile, launchers::launch_openrgb};
-use std::{process::Command, sync::Mutex};
+// So this was used originally to check what devices were connected, but udev ended up being better, leaving this here for reference
 
-use crate::config::get_mouse_id;
+// use crate::{config::get_profile, launchers::launch_openrgb};
+// use std::{process::Command, sync::Mutex};
 
-static DEVICES: Mutex<Option<Vec<String>>> = Mutex::new(Some(vec![]));
+// use crate::config::get_mouse_id;
 
-pub fn check_usbs() {
-    println!("Checking...");
+// static DEVICES: Mutex<Option<Vec<String>>> = Mutex::new(Some(vec![]));
 
-    let mut devices_lock = DEVICES.lock().unwrap();
+// pub fn check_usbs() {
+//     println!("Checking...");
 
-    // Kill any existing openrgb process
-    let _ = Command::new("pkill")
-        .arg("openrgb")
-        .status()
-        .expect("Failed to execute pkill");
+//     let mut devices_lock = DEVICES.lock().unwrap();
 
-    let new_devices = get_device_ids();
+//     // Kill any existing openrgb process
+//     let _ = Command::new("pkill")
+//         .arg("openrgb")
+//         .status()
+//         .expect("Failed to execute pkill");
 
-    if new_devices.contains(&get_mouse_id()) {
-        launch_openrgb(&get_profile());
-    }
+//     let new_devices = get_device_ids();
 
-    // Always update the devices
-    *devices_lock = Some(new_devices);
-}
+//     if new_devices.contains(&get_mouse_id()) {
+//         launch_openrgb(&get_profile());
+//     }
 
-/// Return a `Vec<String>` of each usb product-id as hexadecimal
-fn get_device_ids() -> Vec<String> {
-    let mut devices: Vec<String> = Vec::new();
+//     // Always update the devices
+//     *devices_lock = Some(new_devices);
+// }
 
-    for device in rusb::devices().unwrap().iter() {
-        let device_desc = device.device_descriptor().unwrap();
+// /// Return a `Vec<String>` of each usb product-id as hexadecimal
+// fn get_device_ids() -> Vec<String> {
+//     let mut devices: Vec<String> = Vec::new();
 
-        devices.push(format!("{:04x}", device_desc.product_id()));
-    }
+//     for device in rusb::devices().unwrap().iter() {
+//         let device_desc = device.device_descriptor().unwrap();
 
-    devices
-}
+//         devices.push(format!("{:04x}", device_desc.product_id()));
+//     }
+
+//     devices
+// }
