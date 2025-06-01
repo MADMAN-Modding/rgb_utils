@@ -1,7 +1,7 @@
 use std::{
     env,
     error::Error,
-    thread::{self, sleep},
+    thread,
     time::Duration,
 };
 
@@ -10,7 +10,6 @@ use rgb_utils::{
     config::{get_mouse_id, get_profile, set_mouse_id, set_profile},
     constants, input,
     launchers::launch_openrgb,
-    usb_handler::check_usbs,
 };
 
 use tokio::task;
@@ -85,17 +84,16 @@ async fn listen() -> Result<String, String> {
         println!("Listening for USB events...");
 
         // Should openrgb be launched next loop
-        let mut launch: bool = false;
+        let mut launch: u8 = 0;
 
         let mut eventing = false;
 
         // Loop to listen for events
         loop {
-            if launch && !eventing {
+            if launch == 6 && !eventing {
                 println!("launching");
                 launch_openrgb(&get_profile());
-                thread::sleep(Duration::from_secs(2));
-                launch = false;
+                launch = 0;
             }
 
             // Poll for events
@@ -115,7 +113,7 @@ async fn listen() -> Result<String, String> {
                 let value = prop.value().to_str().unwrap();
 
                 if value == get_mouse_id() {
-                    launch = true;
+                    launch += 1;
                 }
             }
         }
