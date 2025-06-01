@@ -43,7 +43,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     } else {
         println!(
             "{}",
-            "Not enough arguments found.\nUsage: <option> <arg1> [arg2]"
+            "Not enough arguments found.\nUsage: <option (e.g.) -c, -l, -d>"
                 .red()
                 .bold()
         );
