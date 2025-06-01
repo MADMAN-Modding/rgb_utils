@@ -127,7 +127,7 @@ async fn listen() -> Result<String, String> {
 async fn daemon() -> Result<String, String> {
     check_usbs();
 
-    let _ = listen();
+    let _ = listen().await;
 
     loop {
         tokio::time::sleep(Duration::from_secs(1)).await;
