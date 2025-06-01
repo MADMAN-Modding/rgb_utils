@@ -83,7 +83,7 @@ async fn listen() -> Result<String, String> {
 
         println!("Listening for USB events...");
 
-        // Should openrgb be launched next loop
+        // Tracks how many times the id has been seen
         let mut launch: u8 = 0;
 
         let mut eventing = false;
