@@ -1,14 +1,16 @@
 use std::{
     env,
     error::Error,
-    thread,
+    thread::{self, sleep},
     time::Duration,
 };
 
 use colored::Colorize;
 use rgb_utils::{
-    config::{set_mouse_id, set_profile},
-    constants, input, usb_handler::check_usbs,
+    config::{get_mouse_id, get_profile, set_mouse_id, set_profile},
+    constants, input,
+    launchers::launch_openrgb,
+    usb_handler::check_usbs,
 };
 
 use tokio::task;
@@ -82,39 +84,40 @@ async fn listen() -> Result<String, String> {
 
         println!("Listening for USB events...");
 
-        // Tracks if something has happened with the usbs
-        let mut usb_event: bool = false;
+        // Should openrgb be launched next loop
+        let mut launch: bool = false;
 
-        // What value to check for with the `usb_event` bool
-        let mut listen_state = false;
+        let mut eventing = false;
+
         // Loop to listen for events
-
         loop {
-            // If an event has happened
-            if usb_event {
-                // If the events are over
-                if usb_event == listen_state {
-                    thread::sleep(Duration::from_millis(500));
-                    check_usbs();
-                    listen_state = false;
-                    usb_event = false;
-                }
+            if launch && !eventing {
+                println!("launching");
+                launch_openrgb(&get_profile());
+                thread::sleep(Duration::from_secs(2));
+                launch = false;
             }
 
             // Poll for events
             let event = match monitor.iter().next() {
                 Some(event) => {
-                    usb_event = true;
+                    eventing = true;
                     event
                 }
                 None => {
-                    listen_state = true;
+                    eventing = false;
                     thread::sleep(Duration::from_millis(10));
                     continue;
                 }
             };
 
-            println!("{}", event.action().unwrap().to_string_lossy());
+            for prop in event.properties() {
+                let value = prop.value().to_str().unwrap();
+
+                if value == get_mouse_id() {
+                    launch = true;
+                }
+            }
         }
     });
 
@@ -123,4 +126,3 @@ async fn listen() -> Result<String, String> {
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
 }
-
